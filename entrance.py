@@ -1,13 +1,11 @@
 import arcade
 from arcade import SpriteList
-from arcade.examples.drawing_primitives import scale, texture
 from arcade.gui import UIManager, UILabel
 from arcade.gui.widgets.layout import UIAnchorLayout, UIBoxLayout
 import random
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
-
 
 class Enterance(arcade.Window):
     def __init__(self, width, height, title):
@@ -17,10 +15,22 @@ class Enterance(arcade.Window):
         self.sound = arcade.load_sound(f"soundtrack/{random.randint(1, 9)}.mp3")
         self.logo = arcade.load_texture("background_images/Kriveria on Fire.png")
         self.choice_texture = arcade.load_texture('background_images/choice.png')
-        self.texture_dnk = arcade.load_texture("background_images/DNK.png")
-        self.texture_gak = arcade.load_texture("background_images/GAK.png")
-        self.dnk_ico = arcade.Sprite(self.texture_dnk, scale=1.0)
-        self.gak_ico = arcade.Sprite(self.texture_gak, scale=1.0)
+
+        self.dnk_texture = arcade.load_texture("background_images/DNK.png")
+        self.gak_texture = arcade.load_texture("background_images/GAK.png")
+
+        self.dnk_ico = arcade.Sprite(self.dnk_texture, scale=1.0)
+        self.gak_ico = arcade.Sprite(self.gak_texture, scale=1.0)
+
+        self.dnk_ico.center_x = SCREEN_WIDTH // 2 - 250
+        self.dnk_ico.center_y = SCREEN_HEIGHT // 2
+
+        self.gak_ico.center_x = SCREEN_WIDTH // 2 + 250
+        self.gak_ico.center_y = SCREEN_HEIGHT // 2
+
+        self.dnk_ico.team = "Движение Народной Криверии"
+        self.gak_ico.team = "Государственная армия Криверии"
+
         self.manager = UIManager()
         self.manager.enable()
 
@@ -31,6 +41,8 @@ class Enterance(arcade.Window):
         self.choosing_buttons = SpriteList()
         self.choosing_buttons.append(self.dnk_ico)
         self.choosing_buttons.append(self.gak_ico)
+
+        self.selected_team = None
 
         self.setup_widgets()
 
@@ -54,10 +66,7 @@ class Enterance(arcade.Window):
         arcade.draw_texture_rect(self.background, arcade.rect.XYWH(960, 540, SCREEN_WIDTH, SCREEN_HEIGHT))
         arcade.draw_texture_rect(self.logo, arcade.rect.XYWH(500, 1000, 700, 50))
         if self.show_choice_flag:
-            arcade.draw_texture_rect(self.texture_dnk,
-                                     arcade.rect.XYWH(SCREEN_WIDTH // 2 - 250, SCREEN_HEIGHT // 2, 300, 300))
-            arcade.draw_texture_rect(self.texture_gak,
-                                     arcade.rect.XYWH(SCREEN_WIDTH // 2 + 250, SCREEN_HEIGHT // 2, 300, 300))
+            self.choosing_buttons.draw()
             arcade.draw_text(
                 "Выберете сторону для игры",
                 SCREEN_WIDTH // 2,
@@ -68,6 +77,17 @@ class Enterance(arcade.Window):
                 anchor_y="top"
             )
 
+        if self.selected_team:
+            arcade.draw_text(
+                f"Выбрана команда: {self.selected_team}",
+                SCREEN_WIDTH // 2,
+                200,
+                arcade.color.GREEN,
+                font_size=50,
+                bold=True,
+                anchor_x="center"
+            )
+
         self.manager.draw()
 
     def on_key_press(self, key, modifiers):
@@ -75,30 +95,32 @@ class Enterance(arcade.Window):
             if self.label:
                 self.manager.remove(self.label)
                 self.label = None
-                self.show_choice_flag = self.choosing_text = UILabel(
-                    x=SCREEN_WIDTH // 2,
-                    y=SCREEN_HEIGHT - 200,
-                    text="Выберете сторону для игры",
-                    font_size=50,
-                    text_color=arcade.color.WHITE,
-                    width=300
-                )
+                self.show_choice_flag = True
             return
 
         if key == arcade.key.F4 and (modifiers & arcade.key.MOD_ALT):
             arcade.close_window()
             return
 
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button == arcade.MOUSE_BUTTON_LEFT:
+            clicked_buttons = arcade.get_sprites_at_point((x, y), self.choosing_buttons)
+            if clicked_buttons:
+                clicked_button = clicked_buttons[0]
+                self.selected_team = clicked_button.team
+                print(f"Команда выбрана: {self.selected_team}")
+
+    def start_game(self):
+        pass
+
 
 def setup_game(width=800, height=600, title="Kriveria on Fire"):
     game = Enterance(width, height, title)
     return game
 
-
 def main():
     game = setup_game(SCREEN_WIDTH, SCREEN_HEIGHT, "Kriveria on Fire")
     arcade.run()
-
 
 if __name__ == "__main__":
     main()
